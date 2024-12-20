@@ -61,6 +61,9 @@ const RandomQuestion = () => {
     } catch (error) {
       if (error.response) {
         setMessage(error.response.data.message || "An error occurred while fetching the question.");
+        if(error.response.message === "Unauthorized"){
+          router.push("/sign-in");
+        }
         setShowMessage(true);
         localStorage.setItem(
           "questionFilters",
