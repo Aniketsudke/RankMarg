@@ -17,7 +17,6 @@ import { QTableRowSkeleton } from "@/components/questions/QTableRowSkeleton";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { QuestionSetProps, QuestionTableProps } from "@/types";
-import Loading from "@/components/Loading";
 import RandomQuestion from "@/components/questions/RandomQuestion";
 import { Tags } from "@/constant/tags";
 import {
@@ -32,7 +31,6 @@ import {
 import { cn } from '@/lib/utils';
 
 const Questionset = () => {
-  const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [tags, setTags] = useState("");
@@ -77,8 +75,8 @@ const Questionset = () => {
     }
   };
 
-  return !loading ? (
-    <main className="flex flex-col items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+  return (
+  <main className="flex flex-col items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <RandomQuestion  />
       <div className="w-full">
         <Tabs defaultValue="all">
@@ -242,10 +240,9 @@ const Questionset = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </main>
-  ) : (
-    <Loading />
-  );
+    </main>);
+  
+  
 };
 
 export default Questionset;
