@@ -18,11 +18,13 @@ const QuestionPage = ({ params }: { params: { slug: string } }) => {
   const router = useRouter();
   const handleRandom = async() => {
     const storedFilters = JSON.parse(localStorage.getItem('questionFilters') || '{}');
+    console.log(storedFilters);
     try {
       const question = await axios.post(`/api/pickRandom`,
       {
         topic: storedFilters.topic,
         difficulty: storedFilters.difficulty,
+        subject: storedFilters.subject
       }
       );
       if(question){

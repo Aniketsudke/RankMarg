@@ -11,16 +11,21 @@ import { CheckIcon, Shuffle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { PopMessage } from "../PopMessage";
+import { set } from "zod";
 
 
 
-const RandomQuestion = ({ setLoading }) => {
+const RandomQuestion = () => {
   
   const router = useRouter();
-  const [topicTitle, setTopicTitle] = useState("");
+  const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [subject, setSubject] = useState("");
   const [storedFilters, setStoredFilters] = useState(null); 
+  const [message, setMessage] = useState("");
+  const [showMessage, setShowMessage] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const filters = localStorage.getItem("questionFilters");
@@ -30,34 +35,51 @@ const RandomQuestion = ({ setLoading }) => {
   }, []);
 
   const handleRandom = async () => {
+    setLoading(true);
+    setMessage("");
+    setShowMessage(false);
     localStorage.setItem(
       "questionFilters",
-      JSON.stringify({ topicTitle, difficulty, subject })
+      JSON.stringify({ topic, difficulty, subject })
     );
 
-    setLoading(true);
+    
 
     try {
       const response = await axios.post(`/api/pickRandom`, {
-        topic: topicTitle,
+        topic: topic,
         difficulty: difficulty,
         subject: subject,
       });
-
-      if (response.data) {
+      if (response.data.message === "success") {
+        setLoading(true);
         router.push(`/question/${response.data.slug}`);
       }
+      else{
+        setMessage(response.data.message);
+        setShowMessage(true);
+      }
     } catch (error) {
-      console.error("Error fetching random question:", error);
+      if (error.response) {
+        setMessage(error.response.data.message || "An error occurred while fetching the question.");
+        setShowMessage(true);
+        localStorage.setItem(
+          "questionFilters",
+          JSON.stringify({ topic:"", difficulty:"", subject:"" })
+        );
+      } else {
+        setMessage("An error occurred while fetching the question.");
+      }
+      setShowMessage(true);
+      console.error("Fetch Error:", error);
     } finally {
       setLoading(false);
     }
   };
  
   
-  
   return (
-        <Card className="w-full rounded-md">
+        <Card className="w-full rounded-md mt-3">
             <CardHeader>
                 <CardTitle className="text-2xl sm:text-3xl font-bold text-center">
                     Pick Random Question
@@ -83,10 +105,10 @@ const RandomQuestion = ({ setLoading }) => {
                 <Combobox
                     onchange={(newTopic: string) => {
                       if(newTopic === 'Default'){
-                        setTopicTitle("");
+                        setTopic("");
                       }
                       else{
-                        setTopicTitle(newTopic);
+                        setTopic(newTopic);
                       }
                   }}
                 />
@@ -108,16 +130,35 @@ const RandomQuestion = ({ setLoading }) => {
                 <Button className="w-full md:w-1/3 "
                 onClick={handleRandom}
                 >
-                    <Shuffle className="mr-2 h-5 w-5" />
-                    Pick random
+                    
+                    {
+                      loading ? "Loading...":(
+                        <>
+                          <Shuffle className="h-4 w-4" />
+                          Pick random
+                        </>
+                      )
+                    }
                 </Button>
             </div>
             <div className="flex flex-wrap">
-                <Badge className="mr-2 mt-2" variant="outline">Topic: {storedFilters?.topicTitle || "All"}</Badge>
-                <Badge className="mr-2 mt-2" variant="outline">Difficulty: {storedFilters?.difficulty || "All"}</Badge>
-                <Badge className="mr-2 mt-2" variant="outline">Subject: {storedFilters?.subject || "All"}</Badge>
+                <Badge className="mr-2 mt-2" variant="outline">Subject: {
+                  !subject ?(storedFilters?.subject  || "All") : subject
+                  }</Badge>
+                <Badge className="mr-2 mt-2" variant="outline">Topic: {
+                  !topic ?(storedFilters?.topicTitle  || "All") : topic
+                }</Badge>
+                <Badge className="mr-2 mt-2" variant="outline">Difficulty:{
+                  !difficulty ?(storedFilters?.difficulty  || "All") : ( difficulty)
+                  }</Badge>
+                
             </div>
-           
+            <span className="text-xs text-gray-500">*filter are store</span>
+            <PopMessage
+              open={showMessage}
+              message={message}
+              onClose={() => setShowMessage(false)}
+            />
             </CardContent>
         </Card> 
   )
